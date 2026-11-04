@@ -16,6 +16,7 @@ typedef struct {
 Acao *acoes = NULL;
 int quantidadeAcoes = 0;
 
+void limparTela();
 void pausar();
 void cadastroAcao();
 void buscarAcao();
@@ -57,9 +58,9 @@ int main(int argc, char *argv[]) {
 	        	if(quantidadeAcoes == 0){
 	        		printf("Ainda nao foi cadastrada nenhuma acao!");
 	        		pausar();
-	        		return 0;
+	        		break;
 				}else{
-					printf("Digite o codigo da acao que deseja: ");
+					printf("\nDigite o codigo da acao que deseja: ");
 					scanf("%d", &codigoAcao);
 					buscarAcao(codigoAcao);
 				}
@@ -80,6 +81,9 @@ int main(int argc, char *argv[]) {
 	        default:
 	            printf("Opcao nao identificada!");
 	    }
+	    
+	    limparTela();
+	    
 	}while(condicao == 1);
 	    free(acoes);
 
@@ -93,6 +97,8 @@ void pausar() {
 }
 
 void cadastroAcao() {
+
+	limparTela();
 
     Acao *temp = realloc(acoes, (quantidadeAcoes + 1) * sizeof(Acao));
 
@@ -134,6 +140,8 @@ void cadastroAcao() {
 
 void buscarAcao(int codigo){
 	
+	limparTela();
+	
 	int i;
 	for(i = 0; i < quantidadeAcoes; i++){
 		if(acoes[i].codigo == codigo){
@@ -149,13 +157,15 @@ void buscarAcao(int codigo){
 		    pausar();
 		    break;
 		}
+	}	
+}
+
+void limparTela(){
+
+	int i;
+
+    for(i = 0; i < 25; i++){
+    	printf("\n");
 	}
-	
-	
-	
-	
-	
-	
-	
-	
+
 }
