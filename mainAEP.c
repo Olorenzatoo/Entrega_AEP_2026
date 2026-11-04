@@ -16,12 +16,13 @@ typedef struct {
 Acao *acoes = NULL;
 int quantidadeAcoes = 0;
 
+void pausar();
 void cadastroAcao();
 void buscarAcao();
 
 int main(int argc, char *argv[]) {
 
-    int opcao;
+    int opcao, codigoAcao;
     int condicao = 1;
     
 	do{
@@ -34,8 +35,6 @@ int main(int argc, char *argv[]) {
 	    printf("3 - Listar acao\n");
 	    printf("4 - Atualizar situacao\n");
 	    printf("5 - Resumo das acoes\n");
-	    printf("6 - Avaliacao de conhecimento\n");
-	    printf("7 - Ranking de participacao\n");
 	    printf("0 - Sair\n");
 	    printf("=========================================\n");
 	    printf("Escolha uma opcao: ");
@@ -44,7 +43,8 @@ int main(int argc, char *argv[]) {
 	    switch(opcao) {
 	
 			case 0:
-				printf("Ok, ate mais...");
+				printf("\nOk, ate mais...\n");
+				pausar();
 				condicao = 0;
 				break;
 				
@@ -56,10 +56,12 @@ int main(int argc, char *argv[]) {
 	        	
 	        	if(quantidadeAcoes == 0){
 	        		printf("Ainda nao foi cadastrada nenhuma acao!");
-	        		scanf("");
+	        		pausar();
 	        		return 0;
 				}else{
 					printf("Digite o codigo da acao que deseja: ");
+					scanf("%d", &codigoAcao);
+					buscarAcao(codigoAcao);
 				}
 	        	
 	        	
@@ -74,13 +76,7 @@ int main(int argc, char *argv[]) {
 	
 	        case 5:
 	            break;
-	
-	        case 6:
-	            break;
-	
-	        case 7:
-	            break;
-	
+	            
 	        default:
 	            printf("Opcao nao identificada!");
 	    }
@@ -88,6 +84,12 @@ int main(int argc, char *argv[]) {
 	    free(acoes);
 
     return 0;
+}
+
+void pausar() {
+    printf("\nPressione ENTER para continuar...");
+    getchar();
+    getchar();
 }
 
 void cadastroAcao() {
@@ -132,7 +134,22 @@ void cadastroAcao() {
 
 void buscarAcao(int codigo){
 	
-	
+	int i;
+	for(i = 0; i < quantidadeAcoes; i++){
+		if(acoes[i].codigo == codigo){
+			printf("\n========== ACAO ENCONTRADA ==========\n");
+
+		    printf("Codigo: %d\n", acoes[i].codigo);
+		    printf("Nome: %s\n", acoes[i].nome);
+		    printf("Tema: %s\n", acoes[i].tema);
+		    printf("Data: %s\n", acoes[i].data);
+		    printf("Publico-alvo: %s\n", acoes[i].publico);
+		    printf("Responsaveis: %s\n", acoes[i].responsaveis);
+		    printf("Participantes: %d\n", acoes[i].participantes);
+		    pausar();
+		    break;
+		}
+	}
 	
 	
 	
