@@ -57,9 +57,7 @@ int main(int argc, char *argv[]) {
                 break;
 
             case 1:
-
                 cadastroAcao();
-
                 break;
 
             case 2:
@@ -79,9 +77,7 @@ int main(int argc, char *argv[]) {
                 break;
 
             case 3:
-
                 listarAcoes();
-
                 break;
 
             case 4:
@@ -101,21 +97,14 @@ int main(int argc, char *argv[]) {
                 break;
 
             case 5:
-
                 break;
 
             default:
-
                 printf("\nOpcao nao identificada!");
-
+                pausar();
         }
 
-        if(condicao == 1) {
-
-            pausar();
-            limparTela();
-
-        }
+	limparTela();
 
     } while(condicao == 1);
 
@@ -128,7 +117,6 @@ int main(int argc, char *argv[]) {
 void pausar() {
 
     printf("\nPressione ENTER para continuar...");
-
     getchar();
     getchar();
 
@@ -144,11 +132,12 @@ void limparTela() {
         printf("\n");
 
     }
-
 }
 
 
 void cadastroAcao() {
+
+	limparTela();
 
     Acao *temp = realloc(acoes, (quantidadeAcoes + 1) * sizeof(Acao));
 
@@ -197,6 +186,8 @@ void cadastroAcao() {
 
 void buscarAcao(int codigo) {
 
+	limparTela();
+	
     int i;
     int encontrada = 0;
 
@@ -222,7 +213,7 @@ void buscarAcao(int codigo) {
             break;
 
         }
-
+	
     }
 
     if(encontrada == 0) {
@@ -230,7 +221,7 @@ void buscarAcao(int codigo) {
         printf("\nNenhuma acao encontrada com esse codigo!\n");
 
     }
-
+	pausar();
 }
 
 
@@ -244,6 +235,8 @@ void listarAcoes() {
         return;
 
     }
+
+	limparTela();
 
     printf("\n=============== Acoes cadastradas ===============\n");
 
@@ -261,7 +254,8 @@ void listarAcoes() {
         printf("==================================================\n");
 
     }
-
+    
+	pausar();
 }
 
 
@@ -271,6 +265,8 @@ void atualizarAcao(int codigo) {
     int encontrada = 0;
     int opcao;
     int novaSituacao;
+
+	limparTela();
 
     for(i = 0; i < quantidadeAcoes; i++) {
 
@@ -318,6 +314,8 @@ void atualizarAcao(int codigo) {
 
                         printf("\nDados da acao atualizados com sucesso!\n");
 
+						pausar();
+						limparTela();
                         break;
 
 
@@ -339,7 +337,8 @@ void atualizarAcao(int codigo) {
                                 strcpy(acoes[i].situacao, "Pronta");
 
                                 printf("\nSituacao atualizada para Pronta!\n");
-
+									
+								limparTela();	
                                 break;
 
 
@@ -348,7 +347,8 @@ void atualizarAcao(int codigo) {
                                 strcpy(acoes[i].situacao, "Pendente");
 
                                 printf("\nSituacao atualizada para Pendente!\n");
-
+								
+								limparTela();
                                 break;
 
 
@@ -358,6 +358,7 @@ void atualizarAcao(int codigo) {
 
                                 printf("\nSituacao atualizada para Finalizada!\n");
 
+								limparTela();
                                 break;
 
 
@@ -396,5 +397,7 @@ void atualizarAcao(int codigo) {
         printf("\nNenhuma acao encontrada com esse codigo!\n");
 
     }
+    
+    pausar();
 
 }
