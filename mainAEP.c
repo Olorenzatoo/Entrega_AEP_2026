@@ -14,7 +14,6 @@ typedef struct {
     char data[12];
     char publico[100];
     char responsaveis[100];
-    int participantes;
     int participantesPrevistos;
     int participantesReais;
     char situacao[20];
