@@ -4,15 +4,19 @@
 #include <limits.h>
 #include <errno.h>
 #include <ctype.h>
+#define ARQUIVO_DADOS "acoes.dat"
 
 typedef struct {
     int codigo;
     char nome[100];
+    char escola[100];
     char tema[500];
     char data[12];
     char publico[100];
     char responsaveis[100];
     int participantes;
+    int participantesPrevistos;
+    int participantesReais;
     char situacao[20];
 } Acao;
 
@@ -22,20 +26,27 @@ int quantidadeAcoes = 0;
 int validarEntrada(char mensagem[]);
 void lerTexto(char mensagem[], char destino[], int tamanho);
 int validarData(char data[]);
-int codigoExiste(int codigo);
+int lerQuantidade(char mensagem[]);
+int contemTexto(char texto[], char termo[]);
 void limparTela();
 void pausar();
 void cadastroAcao();
+void menuBusca();
 void buscarAcao(int codigo);
+void buscarPorTexto(int campo, char termo[]);
 void listarAcoes();
 void atualizarAcao(int codigo);
+void atualizarSituacao(Acao *acao);
 void exibirAcao(Acao *acao);
 void resumoAcoes();
+void salvarAcoes();
+void carregarAcoes();
 
 int main() {
 
     int opcao, codigoAcao;
-
+    carregarAcoes();
+    
     do {
         printf("\n=========================================\n");
         printf("\t\tPSE Sonora\n");
@@ -44,7 +55,7 @@ int main() {
         printf("1 - Cadastro acao\n");
         printf("2 - Buscar acao\n");
         printf("3 - Listar acao\n");
-        printf("4 - Atualizar situacao\n");
+        printf("4 - Atualizar acao\n");
         printf("5 - Resumo das acoes\n");
         printf("0 - Sair\n");
         printf("=========================================\n");
@@ -66,8 +77,7 @@ int main() {
                     printf("\nNenhuma acao cadastrada!\n");
                     pausar();
                 } else {
-                    codigoAcao = validarEntrada("\nDigite o codigo da acao: ");
-                    buscarAcao(codigoAcao);
+                    menuBusca();
                 }
                 break;
 
@@ -97,9 +107,9 @@ int main() {
         limparTela();
 
     } while(opcao != 0);
-
+    
+    salvarAcoes();
     free(acoes);
-
     return 0;
 }
 
@@ -152,6 +162,41 @@ int validarEntrada(char mensagem[]) {
     }
 }
 
+int lerQuantidade(char mensagem[]) {
+
+    int valor;
+
+    do {
+        valor = validarEntrada(mensagem);
+
+        if(valor < 0) {
+            printf("\nA quantidade nao pode ser negativa!\n\n");
+        }
+
+    } while(valor < 0);
+
+    return valor;
+}
+
+int contemTexto(char texto[], char termo[]) {
+
+    char textoMinusculo[500];
+    char termoMinusculo[500];
+    int i;
+
+    for(i = 0; texto[i] != '\0' && i < 499; i++) {
+        textoMinusculo[i] = tolower((unsigned char)texto[i]);
+    }
+    textoMinusculo[i] = '\0';
+
+    for(i = 0; termo[i] != '\0' && i < 499; i++) {
+        termoMinusculo[i] = tolower((unsigned char)termo[i]);
+    }
+    termoMinusculo[i] = '\0';
+
+    return strstr(textoMinusculo, termoMinusculo) != NULL;
+}
+
 void lerTexto(char mensagem[], char destino[], int tamanho) {
 
     while(1) {
@@ -181,18 +226,6 @@ void lerTexto(char mensagem[], char destino[], int tamanho) {
     }
 }
 
-int codigoExiste(int codigo) {
-
-    int i;
-
-    for(i = 0; i < quantidadeAcoes; i++) {
-        if(acoes[i].codigo == codigo) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
 void cadastroAcao() {
 
     Acao *temporario;
@@ -214,6 +247,7 @@ void cadastroAcao() {
     printf("Codigo da acao: %d\n\n", acoes[quantidadeAcoes].codigo);
 
     lerTexto("Nome da acao: ", acoes[quantidadeAcoes].nome, 100);
+    lerTexto("Escola: ", acoes[quantidadeAcoes].escola, 100);              
     lerTexto("Tema da acao: ", acoes[quantidadeAcoes].tema, 500);
 
     do {
@@ -229,21 +263,98 @@ void cadastroAcao() {
     lerTexto("Responsaveis: ", acoes[quantidadeAcoes].responsaveis, 100);
 
     do {
-        acoes[quantidadeAcoes].participantes =
+        acoes[quantidadeAcoes].participantesPrevistos =                     
             validarEntrada("Quantidade de participantes: ");
 
-        if(acoes[quantidadeAcoes].participantes < 0) {
+        if(acoes[quantidadeAcoes].participantesPrevistos < 0) {            
             printf("\nA quantidade nao pode ser negativa!\n\n");
         }
 
-    } while(acoes[quantidadeAcoes].participantes < 0);
+    } while(acoes[quantidadeAcoes].participantesPrevistos < 0);             
 
-    strcpy(acoes[quantidadeAcoes].situacao, "Pendente");
+    acoes[quantidadeAcoes].participantesReais = 0;                          
+
+    strcpy(acoes[quantidadeAcoes].situacao, "Planejada");                   
 
     quantidadeAcoes++;
 
+    salvarAcoes();                                                          
+
     printf("\nAcao cadastrada com sucesso!\n");
-    printf("Situacao inicial: Pendente\n");
+    printf("Situacao inicial: Planejada\n");                                
+
+    pausar();
+}
+
+void menuBusca() {
+
+    int opcao;
+    char termo[500];
+
+    limparTela();
+
+    printf("\n=============== Buscar acao ===============\n");
+    printf("1 - Buscar por codigo\n");
+    printf("2 - Buscar por escola\n");
+    printf("3 - Buscar por tema\n");
+    printf("0 - Voltar\n");
+
+    opcao = validarEntrada("\nEscolha uma opcao: ");
+
+    switch(opcao) {
+
+        case 1:
+            buscarAcao(validarEntrada("\nDigite o codigo da acao: "));
+            break;
+
+        case 2:
+            lerTexto("\nDigite o nome (ou parte do nome) da escola: ", termo, 100);
+            buscarPorTexto(1, termo);
+            break;
+
+        case 3:
+            lerTexto("\nDigite o tema (ou parte do tema): ", termo, 500);
+            buscarPorTexto(2, termo);
+            break;
+
+        case 0:
+            break;
+
+        default:
+            printf("\nOpcao nao identificada!\n");
+            pausar();
+    }
+}
+
+void buscarPorTexto(int campo, char termo[]) {
+
+    int i;
+    int encontradas = 0;
+    char *textoDoCampo;
+
+    limparTela();
+
+    printf("\n========== RESULTADO DA BUSCA: \"%s\" ==========\n", termo);
+
+    for(i = 0; i < quantidadeAcoes; i++) {
+
+        if(campo == 1) {
+            textoDoCampo = acoes[i].escola;
+        } else {
+            textoDoCampo = acoes[i].tema;
+        }
+
+        if(contemTexto(textoDoCampo, termo)) {
+            exibirAcao(&acoes[i]);
+            encontradas++;
+        }
+    }
+
+    if(encontradas == 0) {
+        printf("\nNenhuma acao encontrada!\n");
+    } else {
+        printf("\n%d acao(oes) encontrada(s).\n", encontradas);
+    }
 
     pausar();
 }
@@ -293,18 +404,24 @@ void exibirAcao(Acao *acao) {
 
     printf("\nCodigo: %d\n", acao->codigo);
     printf("Nome: %s\n", acao->nome);
+    printf("Escola: %s\n", acao->escola);
     printf("Tema: %s\n", acao->tema);
     printf("Data: %s\n", acao->data);
     printf("Publico-alvo: %s\n", acao->publico);
     printf("Responsaveis: %s\n", acao->responsaveis);
-    printf("Participantes: %d\n", acao->participantes);
+    printf("Participantes previstos: %d\n", acao->participantesPrevistos);
+
+    if(strcmp(acao->situacao, "Realizada") == 0) {
+        printf("Participantes reais: %d\n", acao->participantesReais);
+    }
+
     printf("Situacao: %s\n", acao->situacao);
     printf("==================================================\n");
 }
 
 void atualizarAcao(int codigo) {
 
-    int i, opcao, novaSituacao;
+    int i, opcao;
 
     limparTela();
 
@@ -330,10 +447,11 @@ void atualizarAcao(int codigo) {
                         printf("\n========== Editar dados ==========\n");
 
                         lerTexto("Nome da acao: ", acoes[i].nome, 100);
+                        lerTexto("Escola: ", acoes[i].escola, 100);
                         lerTexto("Tema da acao: ", acoes[i].tema, 500);
 
                         do {
-                            lerTexto("Data (DD/MM/AAAA): ", acoes[i].data, 11);
+                            lerTexto("Data (DD/MM/AAAA): ", acoes[i].data, 12);
 
                             if(!validarData(acoes[i].data)) {
                                 printf("\nData invalida! Tente novamente.\n\n");
@@ -344,50 +462,18 @@ void atualizarAcao(int codigo) {
                         lerTexto("Publico-alvo: ", acoes[i].publico, 100);
                         lerTexto("Responsaveis: ", acoes[i].responsaveis, 100);
 
-                        do {
-                            acoes[i].participantes =
-                                validarEntrada("Quantidade de participantes: ");
+                        acoes[i].participantesPrevistos =
+                            lerQuantidade("Quantidade prevista de participantes: ");
 
-                            if(acoes[i].participantes < 0) {
-                                printf("\nQuantidade invalida!\n\n");
-                            }
-
-                        } while(acoes[i].participantes < 0);
+                        salvarAcoes();
 
                         printf("\nDados atualizados com sucesso!\n");
                         pausar();
                         break;
 
                     case 2:
-
-                        printf("\n========== Atualizar situacao ==========\n");
-                        printf("1 - Pronta\n");
-                        printf("2 - Pendente\n");
-                        printf("3 - Finalizada\n");
-
-                        novaSituacao = validarEntrada("\nNova situacao: ");
-
-                        switch(novaSituacao) {
-
-                            case 1:
-                                strcpy(acoes[i].situacao, "Pronta");
-                                printf("\nSituacao atualizada para Pronta!\n");
-                                break;
-
-                            case 2:
-                                strcpy(acoes[i].situacao, "Pendente");
-                                printf("\nSituacao atualizada para Pendente!\n");
-                                break;
-
-                            case 3:
-                                strcpy(acoes[i].situacao, "Finalizada");
-                                printf("\nSituacao atualizada para Finalizada!\n");
-                                break;
-
-                            default:
-                                printf("\nSituacao nao identificada!\n");
-                        }
-
+                        atualizarSituacao(&acoes[i]);
+                        salvarAcoes();
                         pausar();
                         break;
 
@@ -412,35 +498,83 @@ void atualizarAcao(int codigo) {
     pausar();
 }
 
+void atualizarSituacao(Acao *acao) {
+
+    int novaSituacao;
+
+    printf("\n========== Atualizar situacao ==========\n");
+    printf("1 - Planejada\n");
+    printf("2 - Realizada\n");
+    printf("3 - Cancelada\n");
+
+    novaSituacao = validarEntrada("\nNova situacao: ");
+
+    switch(novaSituacao) {
+
+        case 1:
+            strcpy(acao->situacao, "Planejada");
+            acao->participantesReais = 0;
+            printf("\nSituacao atualizada para Planejada!\n");
+            break;
+
+        case 2:
+            strcpy(acao->situacao, "Realizada");
+            printf("\nParticipantes previstos: %d\n", acao->participantesPrevistos);
+            acao->participantesReais =
+                lerQuantidade("Quantidade real de participantes: ");
+            printf("\nSituacao atualizada para Realizada!\n");
+            break;
+
+        case 3:
+            strcpy(acao->situacao, "Cancelada");
+            acao->participantesReais = 0;
+            printf("\nSituacao atualizada para Cancelada!\n");
+            break;
+
+        default:
+            printf("\nSituacao nao identificada!\n");
+    }
+}
+
 void resumoAcoes() {
 
     int i;
-    int prontas = 0;
-    int pendentes = 0;
-    int finalizadas = 0;
+    int planejadas = 0;
+    int realizadas = 0;
+    int canceladas = 0;
+    int previstosRealizadas = 0;
     int totalParticipantes = 0;
+    float percentual;
 
     limparTela();
 
     for(i = 0; i < quantidadeAcoes; i++) {
 
-        totalParticipantes += acoes[i].participantes;
-
-        if(strcmp(acoes[i].situacao, "Pronta") == 0) {
-            prontas++;
-        } else if(strcmp(acoes[i].situacao, "Pendente") == 0) {
-            pendentes++;
-        } else if(strcmp(acoes[i].situacao, "Finalizada") == 0) {
-            finalizadas++;
+        if(strcmp(acoes[i].situacao, "Planejada") == 0) {
+            planejadas++;
+        } else if(strcmp(acoes[i].situacao, "Realizada") == 0) {
+            realizadas++;
+            totalParticipantes += acoes[i].participantesReais;
+            previstosRealizadas += acoes[i].participantesPrevistos;
+        } else if(strcmp(acoes[i].situacao, "Cancelada") == 0) {
+            canceladas++;
         }
     }
 
     printf("\n========== RESUMO DAS ACOES ==========\n");
     printf("Total de acoes: %d\n", quantidadeAcoes);
-    printf("Acoes prontas: %d\n", prontas);
-    printf("Acoes pendentes: %d\n", pendentes);
-    printf("Acoes finalizadas: %d\n", finalizadas);
-    printf("Total de participantes: %d\n", totalParticipantes);
+    printf("Acoes planejadas: %d\n", planejadas);
+    printf("Acoes realizadas: %d\n", realizadas);
+    printf("Acoes canceladas: %d\n", canceladas);
+    printf("Total de participantes (acoes realizadas): %d\n", totalParticipantes);
+
+    if(previstosRealizadas > 0) {
+        percentual = (float)totalParticipantes / previstosRealizadas * 100;
+        printf("Percentual de participacao: %.1f%%\n", percentual);
+    } else {
+        printf("Percentual de participacao: sem acoes realizadas\n");
+    }
+
     printf("======================================\n");
 
     pausar();
@@ -476,6 +610,60 @@ int validarData(char data[]) {
     }
 
     return dia >= 1 && dia <= diasPorMes[mes - 1];
+}
+
+// Grava todas as acoes no arquivo: primeiro a quantidade, depois o vetor
+void salvarAcoes() {
+
+    FILE *arquivo = fopen(ARQUIVO_DADOS, "wb");
+
+    if(arquivo == NULL) {
+        printf("\nAviso: nao foi possivel salvar os dados!\n");
+        return;
+    }
+
+    fwrite(&quantidadeAcoes, sizeof(int), 1, arquivo);
+
+    if(quantidadeAcoes > 0) {
+        fwrite(acoes, sizeof(Acao), quantidadeAcoes, arquivo);
+    }
+
+    fclose(arquivo);
+}
+
+void carregarAcoes() {
+
+    FILE *arquivo = fopen(ARQUIVO_DADOS, "rb");
+    int quantidade;
+
+    if(arquivo == NULL) {
+        return;
+    }
+
+    if(fread(&quantidade, sizeof(int), 1, arquivo) != 1 || quantidade <= 0) {
+        fclose(arquivo);
+        return;
+    }
+
+    acoes = malloc(quantidade * sizeof(Acao));
+
+    if(acoes == NULL) {
+        printf("\nErro ao alocar memoria para carregar os dados!\n");
+        fclose(arquivo);
+        return;
+    }
+
+    if(fread(acoes, sizeof(Acao), quantidade, arquivo) != (size_t)quantidade) {
+        printf("\nAviso: arquivo de dados corrompido. Iniciando sem acoes.\n");
+        free(acoes);
+        acoes = NULL;
+        fclose(arquivo);
+        return;
+    }
+
+    quantidadeAcoes = quantidade;
+
+    fclose(arquivo);
 }
 
 void limparTela() {
