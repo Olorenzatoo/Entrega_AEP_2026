@@ -1,0 +1,17 @@
+# Arquivo de dados gerado pelo programa
+acoes.dat
+
+# Executáveis e arquivos de compilação
+*.exe
+*.o
+*.out
+pse_sonora
+
+# Arquivos de IDE
+*.layout
+*.depend
+.vscode/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
